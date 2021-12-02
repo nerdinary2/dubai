@@ -1,0 +1,553 @@
+<!-- START SIGMA IMPORTS -->
+<script src="../src/sigma.core.js"></script>
+<script src="../src/conrad.js"></script>
+<script src="../src/utils/sigma.utils.js"></script>
+<script src="../src/utils/sigma.polyfills.js"></script>
+<script src="../src/sigma.settings.js"></script>
+<script src="../src/classes/sigma.classes.dispatcher.js"></script>
+<script src="../src/classes/sigma.classes.configurable.js"></script>
+<script src="../src/classes/sigma.classes.graph.js"></script>
+<script src="../src/classes/sigma.classes.camera.js"></script>
+<script src="../src/classes/sigma.classes.quad.js"></script>
+<script src="../src/captors/sigma.captors.mouse.js"></script>
+<script src="../src/captors/sigma.captors.touch.js"></script>
+<script src="../src/renderers/sigma.renderers.canvas.js"></script>
+<script src="../src/renderers/sigma.renderers.webgl.js"></script>
+<script src="../src/renderers/sigma.renderers.svg.js"></script>
+<script src="../src/renderers/sigma.renderers.def.js"></script>
+<script src="../src/renderers/webgl/sigma.webgl.nodes.def.js"></script>
+<script src="../src/renderers/webgl/sigma.webgl.nodes.fast.js"></script>
+<script src="../src/renderers/webgl/sigma.webgl.edges.def.js"></script>
+<script src="../src/renderers/webgl/sigma.webgl.edges.fast.js"></script>
+<script src="../src/renderers/webgl/sigma.webgl.edges.arrow.js"></script>
+<script src="../src/renderers/canvas/sigma.canvas.labels.def.js"></script>
+<script src="../src/renderers/canvas/sigma.canvas.hovers.def.js"></script>
+<script src="../src/renderers/canvas/sigma.canvas.nodes.def.js"></script>
+<script src="../src/renderers/canvas/sigma.canvas.edges.def.js"></script>
+<script src="../src/renderers/canvas/sigma.canvas.edges.curve.js"></script>
+<script src="../src/renderers/canvas/sigma.canvas.edges.arrow.js"></script>
+<script src="../src/renderers/canvas/sigma.canvas.edges.curvedArrow.js"></script>
+<script src="../src/renderers/canvas/sigma.canvas.edgehovers.def.js"></script>
+<script src="../src/renderers/canvas/sigma.canvas.edgehovers.curve.js"></script>
+<script src="../src/renderers/canvas/sigma.canvas.edgehovers.arrow.js"></script>
+<script src="../src/renderers/canvas/sigma.canvas.edgehovers.curvedArrow.js"></script>
+<script src="../src/renderers/canvas/sigma.canvas.extremities.def.js"></script>
+<script src="../src/renderers/svg/sigma.svg.utils.js"></script>
+<script src="../src/renderers/svg/sigma.svg.nodes.def.js"></script>
+<script src="../src/renderers/svg/sigma.svg.edges.def.js"></script>
+<script src="../src/renderers/svg/sigma.svg.edges.curve.js"></script>
+<script src="../src/renderers/svg/sigma.svg.edges.curvedArrow.js"></script>
+<script src="../src/renderers/svg/sigma.svg.labels.def.js"></script>
+<script src="../src/renderers/svg/sigma.svg.hovers.def.js"></script>
+<script src="../src/middlewares/sigma.middlewares.rescale.js"></script>
+<script src="../src/middlewares/sigma.middlewares.copy.js"></script>
+<script src="../src/misc/sigma.misc.animation.js"></script>
+<script src="../src/misc/sigma.misc.bindEvents.js"></script>
+<script src="../src/misc/sigma.misc.bindDOMEvents.js"></script>
+<script src="../src/misc/sigma.misc.drawHovers.js"></script>
+<script src="../plugins/sigma.parsers.json/sigma.parsers.json.js"></script>
+<script src="../plugins/sigma.plugins.dragNodes/sigma.plugins.dragNodes.js"></script>
+<script src="../plugins/sigma.layouts.forceAtlas2/worker.js"></script>
+<script src="../plugins/sigma.layouts.forceAtlas2/supervisor.js"></script>
+
+<!-- END SIGMA IMPORTS -->
+<script src="../plugins/sigma.plugins.tooltips/sigma.plugins.tooltips.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mustache.js/0.8.1/mustache.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+<script src="../plugins/sigma.plugins.filter/sigma.plugins.filter.js"></script>
+<link href='http://fonts.googleapis.com/css?family=Lato:300,700' rel='stylesheet' type='text/css'>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.min.js" integrity="sha384-QJHtvGhmr9XOIpI6YVutG+2QOK9T+ZnN4kzFN1RtK3zEFEIsxhlmWl5/YESvpZ13" crossorigin="anonymous"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
+<div id="container">
+    <style>
+        #graph-container {
+            top: 0;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            position: absolute;
+        }
+
+        .sigma-tooltip {
+            max-width: 240px;
+            max-height: 280px;
+            background-color: rgb(249, 247, 237);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+            border-radius: 6px;
+        }
+
+        .sigma-tooltip-header {
+            font-variant: small-caps;
+            font-size: 120%;
+            color: #437356;
+            border-bottom: 1px solid #aac789;
+            padding: 10px;
+        }
+
+        .sigma-tooltip-body {
+            padding: 10px;
+        }
+
+        .sigma-tooltip-body th {
+            color: #999;
+            text-align: left;
+        }
+
+        .sigma-tooltip-footer {
+            padding: 10px;
+            border-top: 1px solid #aac789;
+        }
+
+        .sigma-tooltip > .arrow {
+            border-width: 10px;
+            position: absolute;
+            display: block;
+            width: 0;
+            height: 0;
+            border-color: transparent;
+            border-style: solid;
+        }
+
+        .sigma-tooltip.top {
+            margin-top: -12px;
+        }
+        .sigma-tooltip.top > .arrow {
+            left: 50%;
+            bottom: -10px;
+            margin-left: -10px;
+            border-top-color: rgb(249, 247, 237);
+            border-bottom-width: 0;
+        }
+
+        .sigma-tooltip.bottom {
+            margin-top: 12px;
+        }
+        .sigma-tooltip.bottom > .arrow {
+            left: 50%;
+            top: -10px;
+            margin-left: -10px;
+            border-bottom-color: rgb(249, 247, 237);
+            border-top-width: 0;
+        }
+
+        .sigma-tooltip.left {
+            margin-left: -12px;
+        }
+        .sigma-tooltip.left > .arrow {
+            top: 50%;
+            right: -10px;
+            margin-top: -10px;
+            border-left-color: rgb(249, 247, 237);
+            border-right-width: 0;
+        }
+
+        .sigma-tooltip.right {
+            margin-left: 12px;
+        }
+        .sigma-tooltip.right > .arrow {
+            top: 50%;
+            left: -10px;
+            margin-top: -10px;
+            border-right-color: rgb(249, 247, 237);
+            border-left-width: 0;
+        }
+        #control-pane {
+            top: 10px;
+            bottom: 10px;
+            right: 10px;
+            position: absolute;
+            width: 300px;
+            background-color: rgb(249, 247, 237);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+        }
+        #control-pane > div {
+            margin: 10px;
+            overflow-x: auto;
+        }
+
+    </style>
+    <div id="graph-container">
+        <div class="wrapper">
+            <a class="zoom-in" href="#" title="Zoom in">Zoom in</a>
+            <a class="zoom-out" href="#" title="Zoom out">Zoom out</a>
+            <a class="initial" href="#" title="initial">Initial State</a>
+            <input type="button" value="Full Screen" onclick="toggleFullScreen()">
+        </div>
+    </div>
+    <div class="jumbotron jumbotron-fluid position-absolute bottom-0 start-0">
+
+    </div>
+
+    <div id="control-pane">
+        <div class="container">
+            <div class="row">
+                <input type="search" placeholder="Search in nodes..." list="nodes" value="">
+            </div>
+            <div class="row">
+                <div class="col">
+                    <h1 class=>Description</h1>
+                    <p>Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.</p>
+                </div>
+            </div>
+
+        </div>
+        <h2 class="underline">filters</h2>
+
+        <div>
+            <h3>min degree <span id="min-degree-val">0</span></h3>
+            0 <input id="min-degree" type="range" min="0" max="0" value="0"> <span id="max-degree-value">0</span><br>
+        </div>
+        <div>
+            <h3>node category</h3>
+            <select id="node-category">
+                <option value="" selected>All categories</option>
+            </select>
+        </div>
+        <span class="line"></span>
+        <div>
+            <button id="reset-btn">Reset filters</button>
+            <button id="export-btn">Export</button>
+        </div>
+        <div id="dump" class="hidden"></div>
+    </div>
+
+
+</div>
+<script>
+    /**
+     * This is an example on how to use node tooltips based on a random graph.
+     */
+
+    var g = {
+        nodes: [],
+        edges: []
+    };
+
+    s = new sigma({
+        graph: g,
+        container: 'graph-container',
+        renderer:{
+            container: document.getElementById('graph-container'),
+            type: 'canvas'
+        },
+
+        settings: {defaultEdgeColor: '#ccc',
+            edgeLabelSize: 'proportional'}
+    });
+
+    sigma.parsers.json(
+        'graph_data.json',
+        s,
+        function() {
+
+            // this below adds x, y attributes as well as size = degree of the node
+            var i,
+                nodes = s.graph.nodes(),
+                len = nodes.length;
+
+            for (i = 0; i < len; i++) {
+                nodes[i].x = Math.random();
+                nodes[i].y = Math.random();
+                nodes[i].size = s.graph.degree(nodes[i].id);
+            }
+            s.graph.nodes().forEach(function(n) {
+                n.originalColor = n.color;
+            });
+            s.graph.edges().forEach(function(e) {
+                e.originalColor = '#666';
+            });
+
+
+            // Refresh the display:
+            s.refresh();
+            s.startForceAtlas2();
+            window.setTimeout(function() {s.killForceAtlas2()}, 1000);
+            // Initialize the Filter API
+            filter = sigma.plugins.filter(s);
+
+            updatePane(s.graph, filter);
+            function applyMinDegreeFilter(e) {
+                var v = e.target.value;
+                _.$('min-degree-val').textContent = v;
+
+                filter
+                    .undo('min-degree')
+                    .nodesBy(
+                        function(n, options) {
+                            return this.graph.degree(n.id) >= options.minDegreeVal;
+                        },
+                        {
+                            minDegreeVal: +v
+                        },
+                        'min-degree'
+                    )
+                    .apply();
+            }
+            function applyCategoryFilter(e) {
+                var c = e.target[e.target.selectedIndex].value;
+
+                filter
+                    .undo('node-category')
+                    .nodesBy(
+                        function(n, options) {
+
+                            return !c.length || n[options.property] === c;
+                        },
+                        {
+                            property: 'class_field',
+                        },
+                        'node-category'
+                    )
+                    .apply();
+            }
+
+            _.$('min-degree').addEventListener("input", applyMinDegreeFilter);  // for Chrome and FF
+            _.$('min-degree').addEventListener("change", applyMinDegreeFilter); // for IE10+, that sucks
+            _.$('node-category').addEventListener("change", applyCategoryFilter);
+        }
+    );
+    s.bind('clickNode', function(e) {
+        window.open(e.data.node.url);
+    });
+
+
+
+    var config = {
+        node: [{
+            show: 'hovers',
+            hide: 'hovers',
+            cssClass: 'sigma-tooltip',
+            position: 'bottom',
+            //autoadjust: true,
+            template:
+                '<div class="arrow"></div>' +
+                ' <div class="sigma-tooltip-header">{{name}}</div>' +
+                '  <div class="sigma-tooltip-body">' +
+                '    <table>' +
+                '      <tr><th>Name</th> <td>{{name}}</td></tr>' +
+                '      <tr><th>URL</th> <td><a href="{{url}}">{{url}}</a></td></tr>' +
+                '      <tr><th>Group</th> <td>{{group}}</td></tr>' +
+                '      <tr><th>id</th> <td>{{id}}</td></tr>' +
+                '    </table>' +
+                '  </div>' +
+                '  <div class="sigma-tooltip-footer">Number of connections: {{degree}}</div>',
+            renderer: function(node, template) {
+                // The function context is s.graph
+                node.degree = this.degree(node.id);
+
+                // Returns an HTML string:
+                return Mustache.render(template, node);
+
+                // Returns a DOM Element:
+                //var el = document.createElement('div');
+                //return el.innerHTML = Mustache.render(template, node);
+            }
+        }, {
+            show: 'rightClickNode',
+            cssClass: 'sigma-tooltip',
+            position: 'right',
+            template:
+                '<div class="arrow"></div>' +
+                ' <div class="sigma-tooltip-header">{{label}}</div>' +
+                '  <div class="sigma-tooltip-body">' +
+                '   <p> Context menu for {{name}} </p>' +
+                '  </div>' +
+                ' <div class="sigma-tooltip-footer">Number of connections: {{degree}}</div>',
+            renderer: function(node, template) {
+                node.degree = this.degree(node.id);
+                return Mustache.render(template, node);
+            }
+        }],
+        stage: {
+            template:
+                '<div class="arrow"></div>' +
+                '<div class="sigma-tooltip-header"> Menu </div>'
+        }
+    };
+
+    // Instanciate the tooltips plugin with a Mustache renderer for node tooltips:
+    var tooltips = sigma.plugins.tooltips(s, s.renderers[0], config);
+
+
+    // Manually open a tooltip on a node:
+    var n = s.graph.nodes('n10');
+    // var prefix = s.renderers[0].camera.prefix;
+    // tooltips.open(n, config.node[0], n[prefix + 'x'], n[prefix + 'y']);
+
+
+
+
+    // zoom in example
+    var c = s.camera;
+    $(document).ready(function(){
+        $(".zoom-in").bind("click",function(){
+            sigma.misc.animation.camera(c, {
+                ratio: c.ratio / c.settings('zoomingRatio')
+            }, {
+                duration: 200
+            });
+        });
+        $(".zoom-out").bind("click",function(){
+            sigma.misc.animation.camera(c, {
+                ratio: c.ratio * c.settings('zoomingRatio')
+            }, {
+                duration: 200
+            });
+        });
+        $(".initial").bind("click",function(){
+            s.cameras[0].goTo({ x: 0, y: 0, angle: 0, ratio: 1 });
+        });
+
+    });
+    function toggleFullScreen() {
+        if ((document.fullScreenElement && document.fullScreenElement !== null) ||
+            (!document.mozFullScreen && !document.webkitIsFullScreen)) {
+            if (document.documentElement.requestFullScreen) {
+                document.documentElement.requestFullScreen();
+            } else if (document.documentElement.mozRequestFullScreen) {
+                document.documentElement.mozRequestFullScreen();
+            } else if (document.documentElement.webkitRequestFullScreen) {
+                document.documentElement.webkitRequestFullScreen(Element.ALLOW_KEYBOARD_INPUT);
+            }
+        } else {
+            if (document.cancelFullScreen) {
+                document.cancelFullScreen();
+            } else if (document.mozCancelFullScreen) {
+                document.mozCancelFullScreen();
+            } else if (document.webkitCancelFullScreen) {
+                document.webkitCancelFullScreen();
+            }
+        }
+    }
+
+    tooltips.bind('shown', function(event) {
+        console.log('tooltip shown', event);
+    });
+
+    tooltips.bind('hidden', function(event) {
+        console.log('tooltip hidden', event);
+    });
+
+    var dragListener = sigma.plugins.dragNodes(s, s.renderers[0]);
+
+    dragListener.bind('startdrag', function(event) {
+        console.log(event);
+    });
+    dragListener.bind('drag', function(event) {
+        console.log(event);
+    });
+    dragListener.bind('drop', function(event) {
+        console.log(event);
+    });
+    dragListener.bind('dragend', function(event) {
+        console.log(event);
+    });
+
+
+
+
+    var filter;
+
+    /**
+     * DOM utility functions
+     */
+    var _ = {
+        $: function (id) {
+            return document.getElementById(id);
+        },
+
+        all: function (selectors) {
+            return document.querySelectorAll(selectors);
+        },
+
+        removeClass: function(selectors, cssClass) {
+            var nodes = document.querySelectorAll(selectors);
+            var l = nodes.length;
+            for ( i = 0 ; i < l; i++ ) {
+                var el = nodes[i];
+                // Bootstrap compatibility
+                el.className = el.className.replace(cssClass, '');
+            }
+        },
+
+        addClass: function (selectors, cssClass) {
+            var nodes = document.querySelectorAll(selectors);
+            var l = nodes.length;
+            for ( i = 0 ; i < l; i++ ) {
+                var el = nodes[i];
+                // Bootstrap compatibility
+                if (-1 == el.className.indexOf(cssClass)) {
+                    el.className += ' ' + cssClass;
+                }
+            }
+        },
+
+        show: function (selectors) {
+            this.removeClass(selectors, 'hidden');
+        },
+
+        hide: function (selectors) {
+            this.addClass(selectors, 'hidden');
+        },
+
+        toggle: function (selectors, cssClass) {
+            var cssClass = cssClass || "hidden";
+            var nodes = document.querySelectorAll(selectors);
+            var l = nodes.length;
+            for ( i = 0 ; i < l; i++ ) {
+                var el = nodes[i];
+                //el.style.display = (el.style.display != 'none' ? 'none' : '' );
+                // Bootstrap compatibility
+                if (-1 !== el.className.indexOf(cssClass)) {
+                    el.className = el.className.replace(cssClass, '');
+                } else {
+                    el.className += ' ' + cssClass;
+                }
+            }
+        }
+    };
+
+
+    function updatePane (graph, filter) {
+        // get max degree
+        var maxDegree = 0,
+            categories = {};
+
+        // read nodes
+        graph.nodes().forEach(function(n) {
+            maxDegree = Math.max(maxDegree, graph.degree(n.id));
+            categories[n.class_field] = true;
+        })
+
+        // min degree
+        _.$('min-degree').max = maxDegree;
+        _.$('max-degree-value').textContent = maxDegree;
+
+        // node category
+        var nodecategoryElt = _.$('node-category');
+        Object.keys(categories).forEach(function(c) {
+            var optionElt = document.createElement("option");
+            optionElt.text = c;
+            nodecategoryElt.add(optionElt);
+        });
+
+        // reset button
+        _.$('reset-btn').addEventListener("click", function(e) {
+            _.$('min-degree').value = 0;
+            _.$('min-degree-val').textContent = '0';
+            _.$('node-category').selectedIndex = 0;
+            filter.undo().apply();
+            _.$('dump').textContent = '';
+            _.hide('#dump');
+        });
+
+        // export button
+        _.$('export-btn').addEventListener("click", function(e) {
+            var chain = filter.serialize();
+            console.log(chain);
+            _.$('dump').textContent = JSON.stringify(chain);
+            _.show('#dump');
+        });
+    }
+
+</script>
