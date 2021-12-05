@@ -49,6 +49,7 @@
 <script src="plugins/sigma.plugins.dragNodes/sigma.plugins.dragNodes.js"></script>
 <script src="plugins/sigma.layouts.forceAtlas2/worker.js"></script>
 <script src="plugins/sigma.layouts.forceAtlas2/supervisor.js"></script>
+<script src="plugins/sigma.renderers.edgeLabels/sigma.canvas.edges.labels.def.js"></script>
 
 <!-- END SIGMA IMPORTS -->
 <script src="plugins/sigma.plugins.tooltips/sigma.plugins.tooltips.js"></script>
@@ -181,7 +182,13 @@
     <div id="control-pane">
         <div class="container">
             <div class="row">
-                <input type="search" placeholder="Search in nodes..." list="nodes" value="">
+                <div class="search-bar">
+                    <input type="text" id="seeker" placeholder="search.." >
+                    <input type="button" value="Submit" onclick="search(document.getElementById('seeker').value)" />
+                </div>
+            </div>
+            <div class="row">
+                <div id="content" display="none"></div>
             </div>
             <div class="row">
                 <div class="col">
@@ -212,6 +219,8 @@
     </div>
 
 
+
+
 </div>
 <script>
     /**
@@ -232,7 +241,8 @@
         },
 
         settings: {defaultEdgeColor: '#ccc',
-            edgeLabelSize: 'proportional'}
+            edgeLabelSize: 'proportional',
+        drawEdgeLabels:true,}
     });
 
     sigma.parsers.json(
@@ -549,5 +559,47 @@
             _.show('#dump');
         });
     }
+    function search(keyword){
+        $.getJSON('graph_data.json', function(data) {
+            output = ""
+            $.each(data.nodes, function (key, val) {
+                if (JSON.stringify(val).indexOf(keyword)>=0){
+                    output += "<div class='values'>";
+                    output += '<h5 class="value-id">' + val.id + '</h5>';
+                    output += '<p class="value-name">' + val.name + '</p>'
+                    output += "</div>";
+                }
+            })
+            if (output==="")
+            {
+                output = "<p> No matches</p>"
+            }
+            if (keyword === ""){
+                output = ""
+            }
+            /* SEEKER FUNCTION */
+            if (!RegExp.escape) {
+                RegExp.escape = function (s) {
+                    return s.replace(/[\-\[\]{}()*+?.,\\\^$|#\s]/g, "\\$&")
+                };
+            }
+
+            jQuery(function(){
+                var $rows = $('.values');
+                $('#seeker').keyup(function () {
+                    var regex =  new RegExp(RegExp.escape($.trim(this.value).replace(/\s+/g, ' ')), 'i')
+                    $rows.hide().filter(function () {
+                        var text = $(this).children(".value-name").text().replace(/\s+/g, ' ');
+                        return regex.test(text)
+                    }).show();
+                });
+            });
+            $('#content').html(output);
+        });
+    }
+
+
+
+
 
 </script>
